@@ -1,0 +1,74 @@
+#!/usr/bin/env Rscript
+
+# Copyright (c) 2016,
+# Martina Fischer, fischerm@rki.de, Robert Koch Institute, Germany, 
+# All rights reserved. For details, please note the license.txt.
+
+
+# DiTASiC -  "Differential Taxa Abundance including Similarity Correction"
+library(methods)
+
+DEBUG <- F
+
+# get script path
+args <- commandArgs(trailingOnly = FALSE)
+script.arg <- "--file="
+script.name <- sub(script.arg, "", args[grep(script.arg, args)])
+script.path <- dirname(script.name)
+
+
+# sources and libraries
+source(paste(script.path, '/core/AbundanceEstimation.R', sep=""))
+source(paste(script.path, '/core/EmpDist.R', sep=""))
+source(paste(script.path, '/core/DiffAbundance.R', sep=""))
+source(paste(script.path, '/core/parameters.R', sep=""))
+source(paste(script.path, '/core/DataLoad.R', sep=""))
+loadPackages(c("optparse","RcppCNPy","AER"), quietly=TRUE)
+
+# parsing parameter
+params <- parseParameters()
+
+if (is.null(params$refs) || is.null(params$Mat) || is.null(params$counts_s1) || is.null(params$N_s1)) {
+   stop("\n\tusage: ditasic -r REFPATH_FILE -a SIMILARITY_MATRIX -x COUNTS_S1 -n TOTAL_S1 [-y COUNTS_S2 -m TOTAL_S2] [options]")
+}
+
+if (DEBUG){
+  print(args)
+  print(params)
+}
+
+
+# Load and check data
+data <- data.load(params$refs, params$Mat, params$counts_s1, params$N_s1, params$counts_s2, params$N_s2)
+filtering       <- params$filter
+pval.threshold  <- params$pval_thres
+min.threshold   <- params$min_thres
+seed            <- params$seed
+filename        <- params$output
+
+# Abundance estimation
+abundance_s1 <- AbundanceEstim(data$mat, data$counts_s1, data$N1, filtering, pval.threshold, min.threshold)
+
+if (is.na(data$counts_s2)[1]==T ) {
+	# output
+	Abundance_output(abundance_s1, data$taxa, filename)
+	} else {
+	abundance_s2 <- AbundanceEstim(data$mat, data$counts_s2, data$N2, filtering, pval.threshold, min.threshold)
+
+	# Empirical distribution
+	N.fac <- data$N2/data$N1
+	empdist_s1 <- create.empdist(abundance_s1, norm.fac=1)
+	empdist_s2 <- create.empdist(abundance_s2, norm.fac=N.fac)
+
+	# Differential abundance
+	norm.coeff_s1 <- abundance_s1[[1]]/data$N1
+	norm.coeff_s2 <- abundance_s2[[1]]/data$N2
+	DiffExpr_result <- DiffExpr(empdist_s1, empdist_s2, norm.coeff_s1, norm.coeff_s2, min.threshold, seed=seed)
+
+
+	# output
+	print_output(DiffExpr_result, data$taxa, filename)
+	}
+
+
+

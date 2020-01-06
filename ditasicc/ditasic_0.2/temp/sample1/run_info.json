@@ -1,0 +1,13 @@
+{
+	"n_targets": 58,
+	"n_bootstraps": 0,
+	"n_processed": 750000,
+	"n_pseudoaligned": 0,
+	"n_unique": 0,
+	"p_pseudoaligned": 0.0,
+	"p_unique": 0.0,
+	"kallisto_version": "0.46.1",
+	"index_version": 10,
+	"start_time": "Mon Dec 30 02:54:57 2019",
+	"call": "kallisto pseudo -t 32 -i kalindex_35ref -o ./temp/sample1 --single -l 100 -s 20 data/sample1.fastq"
+}

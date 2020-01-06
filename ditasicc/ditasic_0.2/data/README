@@ -1,0 +1,15 @@
+- reference_genomes/
+
+This directory contains the fasta files of the reference genome sequences used
+for the abundance estimation. bowtie2 indices will be created here too. 
+
+- reference_paths
+
+This text file contains the file paths to the reference_genomes. Normally, it is
+easier if the paths are absolute paths to the files, but for the sake of port-
+ability of this example, paths relative to the example root directory have been
+used.  
+
+- sample1.fastq / sample2.fastq
+
+Two genomic samples with differential abundances generated from the references.
